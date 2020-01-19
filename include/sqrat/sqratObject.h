@@ -29,10 +29,10 @@
 #if !defined(_SQRAT_OBJECT_H_)
 #define _SQRAT_OBJECT_H_
 
-#include <squirrel.h>
-#include <sqdirect.h>
+#include "../../squirrel.h"
+#include "../../sqdirect.h"
 #include <string.h>
-#include <EASTL/type_traits.h>
+#include <type_traits>
 
 #include "sqratAllocator.h"
 #include "sqratTypes.h"
@@ -88,7 +88,7 @@ public:
     /// \tparam T       Type
     ///
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    template <class T, typename eastl::disable_if<eastl::is_arithmetic<T>::value, bool>::type = false>
+    template <class T, typename std::enable_if<!std::is_arithmetic<T>::value, bool>::type = false>
     Object(const T &t, HSQUIRRELVM v) : vm(v), release(true) {
       Var<T>::push(vm, t);
       SQRAT_VERIFY(SQ_SUCCEEDED(sq_getstackobj(vm, -1, &obj)));
@@ -107,19 +107,19 @@ public:
         sq_resetobject(&obj);
     }
 
-    template <class T, typename eastl::enable_if<(eastl::is_integral<T>::value && !eastl::is_same<T, bool>::value), bool>::type = false>
+    template <class T, typename std::enable_if<(std::is_integral<T>::value && !std::is_same<T, bool>::value), bool>::type = false>
     Object(T t, HSQUIRRELVM v) : vm(v), release(false) {
       obj._type = OT_INTEGER;
       obj._unVal.nInteger = (SQInteger)t;
     }
 
-    template <class T, typename eastl::enable_if<eastl::is_floating_point<T>::value, bool>::type = false>
+    template <class T, typename std::enable_if<std::is_floating_point<T>::value, bool>::type = false>
     Object(T t, HSQUIRRELVM v) : vm(v), release(false) {
       obj._type = OT_FLOAT;
       obj._unVal.fFloat = (SQFloat)t;
     }
 
-    template <class T, typename eastl::enable_if<eastl::is_same<T, bool>::value, bool>::type = false>
+    template <class T, typename std::enable_if<std::is_same<T, bool>::value, bool>::type = false>
     Object(T t, HSQUIRRELVM v) : vm(v), release(false) {
       obj._type = OT_BOOL;
       obj._unVal.nInteger = t ? 1 : 0;
@@ -505,11 +505,11 @@ protected:
 
 // Optimized no-stack-push-and-pop versions
 template<> inline int32_t Object::Cast() const {
-    return sq_direct_tointeger(&obj);
+    return (int32_t)sq_direct_tointeger(&obj);
 }
 
 template<> inline int64_t Object::Cast() const {
-    return sq_direct_tointeger(&obj);
+    return (int64_t)sq_direct_tointeger(&obj);
 }
 
 template<> inline float Object::Cast() const {

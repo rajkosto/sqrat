@@ -30,7 +30,7 @@
 #if !defined(_SQRAT_MEMBER_METHODS_H_)
 #define _SQRAT_MEMBER_METHODS_H_
 
-#include <squirrel.h>
+#include "../../squirrel.h"
 #include "sqratTypes.h"
 
 namespace Sqrat {
@@ -155,7 +155,7 @@ inline SQInteger sqDefaultSet(HSQUIRRELVM vm) {
     sq_getuserdata(vm, -1, (SQUserPointer*)&memberPtr, NULL); // Get Member...
     M member = *memberPtr;
 
-    if (eastl::is_pointer<V>::value || eastl::is_reference<V>::value) {
+    if (std::is_pointer<V>::value || std::is_reference<V>::value) {
         ptr->*member = Var<V>(vm, 2).value;
     } else {
         ptr->*member = Var<const V&>(vm, 2).value;
@@ -171,7 +171,7 @@ inline SQInteger sqStaticSet(HSQUIRRELVM vm) {
     sq_getuserdata(vm, -1, (SQUserPointer*)&memberPtr, NULL); // Get Member...
     M member = *memberPtr;
 
-    if (eastl::is_pointer<V>::value || eastl::is_reference<V>::value) {
+    if (std::is_pointer<V>::value || std::is_reference<V>::value) {
         *member = Var<V>(vm, 2).value;
     } else {
         *member = Var<const V&>(vm, 2).value;

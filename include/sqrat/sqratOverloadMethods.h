@@ -29,9 +29,9 @@
 #if !defined(_SQRAT_OVERLOAD_METHODS_H_)
 #define _SQRAT_OVERLOAD_METHODS_H_
 
-#include <squirrel.h>
-#include <sqstdaux.h>
-#include <EASTL/string.h>
+#include "../../squirrel.h"
+#include "../../sqstdaux.h"
+#include <string>
 #include "sqratTypes.h"
 #include "sqratUtil.h"
 #include "sqratGlobalMethods.h"
@@ -44,9 +44,9 @@ namespace Sqrat {
 class SqOverloadName {
 public:
 
-    static string Get(const SQChar* name, int args) {
-      string overloadName(string::CtorSprintf(), _SC("__overload_%s%d"), name, args);
-      return overloadName;
+    static string Get(const SQChar* name, SQInteger args) {
+      //string overloadName(string::CtorSprintf(), _SC("__overload_%s%d"), name, args);
+      return std::string{ _SC("__overload_") } + name + std::to_string(args);
     }
 };
 
@@ -91,7 +91,7 @@ public:
 
     static SQInteger Func(HSQUIRRELVM vm) {
         // Get the arg count
-        int argCount = sq_gettop(vm) - 2;
+        SQInteger argCount = sq_gettop(vm) - 2;
 
         const SQChar* funcName;
         sq_getstring(vm, -1, &funcName); // get the function name (free variable)

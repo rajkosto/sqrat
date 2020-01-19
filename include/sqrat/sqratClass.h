@@ -29,7 +29,8 @@
 #if !defined(_SQRAT_CLASS_H_)
 #define _SQRAT_CLASS_H_
 
-#include <squirrel.h>
+#include "../../squirrel.h"
+#include "../../sqstdaux.h"
 #include <string.h>
 
 #include "sqratObject.h"
@@ -106,7 +107,7 @@ public:
             if (ClassType<C>::getStaticClassData().expired()) {
                 cd->staticData.reset(new StaticClassData<C, void>);
                 cd->staticData->copyFunc  = &A::Copy;
-                cd->staticData->className = eastl::move(className);
+                cd->staticData->className = std::move(className);
                 cd->staticData->baseClass = NULL;
 
                 ClassType<C>::getStaticClassData() = cd->staticData;
@@ -158,7 +159,7 @@ public:
     /// If V is not a pointer or reference, then it must have a default constructor.
     /// See Sqrat::Class::Prop to work around this requirement
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    template<class V>
+    template<class V, typename C = C>
     Class& Var(const SQChar* name, V C::* var) {
         ClassData<C>* cd = ClassType<C>::getClassData(vm);
 
@@ -178,7 +179,7 @@ public:
     /// If V is not a pointer or reference, then it must have a default constructor.
     /// See Sqrat::Class::Prop to work around this requirement
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    template<class V>
+    template<class V, typename C = C>
     Class& ConstVar(const SQChar* name, V C::* var) {
         ClassData<C>* cd = ClassType<C>::getClassData(vm);
 
@@ -643,7 +644,7 @@ public:
             if (ClassType<C>::getStaticClassData().expired()) {
                 cd->staticData.reset(new StaticClassData<C, B>);
                 cd->staticData->copyFunc  = &A::Copy;
-                cd->staticData->className = eastl::move(className);
+                cd->staticData->className = std::move(className);
                 cd->staticData->baseClass = bd->staticData.get();
 
                 ClassType<C>::getStaticClassData() = cd->staticData;

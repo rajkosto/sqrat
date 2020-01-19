@@ -30,7 +30,7 @@
 #if !defined(_SQRAT_SQFUNC_H_)
 #define _SQRAT_SQFUNC_H_
 
-#include <squirrel.h>
+#include "../../squirrel.h"
 #include "sqratObject.h"
 #include "sqratUtil.h"
 
@@ -63,9 +63,9 @@ public:
 
     Function(Function&& sf) : Function()
     {
-      eastl::swap(vm, sf.vm);
-      eastl::swap(env, sf.env);
-      eastl::swap(obj, sf.obj);
+      std::swap(vm, sf.vm);
+      std::swap(env, sf.env);
+      std::swap(obj, sf.obj);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -119,9 +119,9 @@ public:
     Function& operator=(Function&& sf)
     {
       Release();
-      eastl::swap(vm, sf.vm);
-      eastl::swap(env, sf.env);
-      eastl::swap(obj, sf.obj);
+      std::swap(vm, sf.vm);
+      std::swap(env, sf.env);
+      std::swap(obj, sf.obj);
       return *this;
     }
 
@@ -223,10 +223,10 @@ public:
           return false;
       }
 
-      typedef typename eastl::remove_reference<
+      typedef typename std::remove_reference<
                           vargs::TailElem_t<ArgsAndRet...>>::type R;
 
-      R& ret = vargs::tail(eastl::forward<ArgsAndRet>(args_and_ret)...);
+      R& ret = vargs::tail(std::forward<ArgsAndRet>(args_and_ret)...);
       ret = Var<R>(vm, -1).value;
       sq_settop(vm, top);
       return true;

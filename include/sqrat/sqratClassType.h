@@ -29,10 +29,10 @@
 #if !defined(_SQRAT_CLASSTYPE_H_)
 #define _SQRAT_CLASSTYPE_H_
 
-#include <squirrel.h>
-#include <EASTL/utility.h>
-#include <ska_hash_map/flat_hash_map2.hpp>
-#include <EASTL/shared_ptr.h>
+#include "../../squirrel.h"
+#include <utility>
+#include <unordered_map>
+#include <memory>
 
 #include "sqratUtil.h"
 
@@ -58,7 +58,7 @@ struct AbstractStaticClassData {
     }
 
     AbstractStaticClassData* baseClass;
-    string                   className;
+    std::string              className;
     COPYFUNC                 copyFunc;
 };
 
@@ -76,7 +76,7 @@ struct StaticClassData : public AbstractStaticClassData {
 };
 
 template<class C> using InstancesMap = unordered_map<C*, HSQOBJECT>;
-template<class C> using InstancePtrAndMap = eastl::pair<C*, eastl::shared_ptr<typename InstancesMap<C>::type> >;
+template<class C> using InstancePtrAndMap = std::pair<C*, std::shared_ptr<typename InstancesMap<C>::type> >;
 
 // Every Squirrel class object created by Sqrat in every VM has its own unique ClassData object stored in the registry table of the VM
 template<class C>
@@ -84,8 +84,8 @@ struct ClassData {
     HSQOBJECT classObj;
     HSQOBJECT getTable;
     HSQOBJECT setTable;
-    eastl::shared_ptr<typename InstancesMap<C>::type> instances;
-    eastl::shared_ptr<AbstractStaticClassData> staticData;
+    std::shared_ptr<typename InstancesMap<C>::type> instances;
+    std::shared_ptr<AbstractStaticClassData> staticData;
 
     static int type_id_helper;
     static void* type_id() { return &type_id_helper; }
@@ -94,16 +94,16 @@ struct ClassData {
 template<class C> int ClassData<C>::type_id_helper = 0;
 
 // Lookup static class data by type_info rather than a template because C++ cannot export generic templates
-struct IntPtrHash { size_t operator()(const void *p) { return uintptr_t(p) >> 2; } };
+struct IntPtrHash { size_t operator()(const void *p) const { return uintptr_t(p) >> 2; } };
 template <typename T = void> // dummy template for static var (in-function static generates ineffective, useless for us, thread-safe code)
 class _ClassType_helper
 {
 public:
-    static ska::flat_hash_map<const void*, eastl::weak_ptr<AbstractStaticClassData>, IntPtrHash> data;
-    static eastl::weak_ptr<AbstractStaticClassData>& _getStaticClassData(const void* type) { return data[type]; }
+    static std::unordered_map<const void*, std::weak_ptr<AbstractStaticClassData>, IntPtrHash> data;
+    static std::weak_ptr<AbstractStaticClassData>& _getStaticClassData(const void* type) { return data[type]; }
 };
 template<typename T>
-ska::flat_hash_map<const void*, eastl::weak_ptr<AbstractStaticClassData>, IntPtrHash> _ClassType_helper<T>::data;
+std::unordered_map<const void*, std::weak_ptr<AbstractStaticClassData>, IntPtrHash> _ClassType_helper<T>::data;
 
 struct ClassesRegistryTable {
     static SQUserPointer slotKey() {
@@ -132,7 +132,7 @@ public:
         return *ud;
     }
 
-    static eastl::weak_ptr<AbstractStaticClassData>& getStaticClassData() {
+    static std::weak_ptr<AbstractStaticClassData>& getStaticClassData() {
         return _ClassType_helper<>::_getStaticClassData(ClassData<C>::type_id());
     }
 
@@ -293,7 +293,11 @@ public:
     static SQInteger ToString(HSQUIRRELVM vm) {
         HSQOBJECT ho;
         sq_getstackobj(vm, 1, &ho);
-        eastl::string s(eastl::string::CtorSprintf(), _SC("%s (0x%p)"), ClassName().c_str(), ho._unVal.pInstance);
+        //std::string s(std::string::CtorSprintf(), _SC("%s (0x%p)"), ClassName().c_str(), ho._unVal.pInstance);
+        std::string s = ClassName();
+        s += " (0x";
+        s += std::to_string((uintptr_t)ho._unVal.pInstance);
+        s += ")";
         sq_pushstring(vm, s.c_str(), s.length());
         return 1;
     }

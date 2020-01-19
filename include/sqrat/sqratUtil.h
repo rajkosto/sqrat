@@ -43,19 +43,17 @@
 
 #endif
 
-#include <squirrel.h>
-#include <sqstdaux.h>
-#include <EASTL/tuple.h>
-#include <EASTL/string.h>
-#include <EASTL/hash_map.h>
-#include <EASTL/type_traits.h>
+#include "../../squirrel.h"
+#include "../../sqstdaux.h"
+#include <tuple>
+#include <string>
+#include <unordered_map>
+#include <type_traits>
 
 #if (defined(_MSC_VER) && _MSC_VER >= 1900) || (__cplusplus >= 201402L) || (__cplusplus == 201300L)
 #else
   #error C++14 support required
 #endif
-
-EA_DISABLE_ALL_VC_WARNINGS()
 
 namespace Sqrat {
 
@@ -64,7 +62,7 @@ namespace Sqrat {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     template<class Key, class T>
     struct unordered_map {
-        typedef eastl::hash_map<Key, T> type;
+        typedef std::unordered_map<Key, T> type;
     };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -86,7 +84,7 @@ void SQRAT_UNUSED(const T&) {}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Defines a string that is definitely compatible with the version of Squirrel being used (normally this is std::string)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-typedef eastl::basic_string<SQChar> string;
+typedef std::basic_string<SQChar> string;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -127,7 +125,9 @@ public:
 ///
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 inline string FormatTypeError(HSQUIRRELVM vm, SQInteger idx, const SQChar *expectedType) {
-    string err(string::CtorSprintf{}, _SC("wrong type (%s expected)"), expectedType);
+  string err = _SC("wrong type (");
+  err += expectedType;
+  err += " expected)";
     if (SQ_SUCCEEDED(sq_typeof(vm, idx))) {
         const SQChar* actualType = _SC("n/a");
         sq_tostring(vm, -1);
@@ -169,8 +169,8 @@ namespace vargs {
   template<class... T>
   struct TailElem
   {
-    typedef eastl::tuple<T...> tuple;
-    typedef typename eastl::tuple_element<eastl::tuple_size<tuple>::value - 1, tuple>::type type;
+    typedef std::tuple<T...> tuple;
+    typedef typename std::tuple_element<std::tuple_size<tuple>::value - 1, tuple>::type type;
   };
 
   template<class Head, class... T>
@@ -194,7 +194,7 @@ namespace vargs {
   template<class Head, class... Tail>
   constexpr TailElem_t<Head, Tail...> tail(Head&&, Tail&&... args)
   {
-    return tail(eastl::forward<Tail>(args)...);
+    return tail(std::forward<Tail>(args)...);
   }
 
   template<class Arg>
@@ -214,42 +214,42 @@ namespace vargs {
 #pragma warning(disable: 4100)
 #endif
   template <class Func, class Tuple, size_t... Indexes>
-  auto apply_helper(Func pf, eastl::index_sequence<Indexes...>, Tuple &args)
+  decltype(auto) apply_helper(Func pf, std::index_sequence<Indexes...>, Tuple &args)
   {
-    return pf(eastl::get<Indexes>(args).value...);
+    return pf(std::get<Indexes>(args).value...);
   }
 
   template <class Func, class Tuple>
-  auto apply(Func pf, Tuple &&args)
+  decltype(auto) apply(Func pf, Tuple &&args)
   {
-    constexpr auto argsN = eastl::tuple_size<eastl::decay_t<Tuple>>::value;
-    return apply_helper(pf, eastl::make_index_sequence<argsN>(), args);
+    constexpr auto argsN = std::tuple_size<std::decay_t<Tuple>>::value;
+    return apply_helper(pf, std::make_index_sequence<argsN>(), args);
   }
 
   template <class C, class Member, class Tuple, size_t... Indexes>
-  auto apply_member_helper(C *ptr, Member pf, eastl::index_sequence<Indexes...>,
+  decltype(auto) apply_member_helper(C *ptr, Member pf, std::index_sequence<Indexes...>,
                            Tuple &args)
   {
-    return (ptr->*pf)(eastl::get<Indexes>(args).value...);
+    return (ptr->*pf)(std::get<Indexes>(args).value...);
   }
 
   template <class C, class Member, class Tuple>
-  auto apply_member(C *ptr, Member pf, Tuple &&args)
+  decltype(auto) apply_member(C *ptr, Member pf, Tuple &&args)
   {
-    constexpr auto argsN = eastl::tuple_size<eastl::decay_t<Tuple>>::value;
-    return apply_member_helper(ptr, pf, eastl::make_index_sequence<argsN>(), args);
+    constexpr auto argsN = std::tuple_size<std::decay_t<Tuple>>::value;
+    return apply_member_helper(ptr, pf, std::make_index_sequence<argsN>(), args);
   }
 #if defined(_MSC_VER)
 #pragma warning(pop)
 #endif
 }
 
-// add meta-functions aliases that are missing in eastl
+// add meta-functions aliases that are missing in std
 template <typename T>
-using remove_pointer_t = typename eastl::remove_pointer<T>::type;
+using remove_pointer_t = typename std::remove_pointer<T>::type;
 
 template <typename T>
-using remove_const_t = typename eastl::remove_const<T>::type;
+using remove_const_t = typename std::remove_const<T>::type;
 
 struct void_type
 {
@@ -258,8 +258,8 @@ struct void_type
 
 template<typename T>
 struct is_function :
-          eastl::disjunction<eastl::is_function<T>,
-                             eastl::is_function<remove_pointer_t<eastl::remove_reference_t<T>>>
+          std::disjunction<std::is_function<T>,
+                             std::is_function<remove_pointer_t<std::remove_reference_t<T>>>
                              >
 {
 };
@@ -301,7 +301,7 @@ using member_function_signature_t = typename member_function_signature<T>::type;
 template<class T>
 struct get_class_callop_signature
 {
-  using type = member_function_signature_t<decltype(&eastl::remove_reference_t<T>::operator())>;
+  using type = member_function_signature_t<decltype(&std::remove_reference_t<T>::operator())>;
 };
 
 template<class T>
@@ -342,11 +342,11 @@ using get_function_signature_t = typename get_function_signature<Func>::type;
 
 
 template<typename T>
-struct get_callable_function : eastl::conditional_t<eastl::is_member_function_pointer<T>::value,
+struct get_callable_function : std::conditional_t<std::is_member_function_pointer<T>::value,
                                                     member_function_signature<T>,
-                                                    eastl::conditional_t<is_function<T>::value,
+                                                    std::conditional_t<is_function<T>::value,
                                                                           get_function_signature<remove_pointer_t<T>>,
-                                                                          eastl::conditional_t<eastl::is_class<T>::value,
+                                                                          std::conditional_t<std::is_class<T>::value,
                                                                                             get_class_callop_signature<T>,
                                                                                             void_type>
                                                                         >
@@ -403,7 +403,7 @@ struct has_call_operator
 
 template<typename T>
 struct is_callable :
-  eastl::conditional<eastl::is_class<T>::value,
+  std::conditional<std::is_class<T>::value,
                       has_call_operator<T>,
                       is_function<T>>::type
 {
@@ -413,7 +413,5 @@ template<typename T>
 constexpr int is_callable_v = is_callable<T>::value;
 
 }
-
-EA_RESTORE_ALL_VC_WARNINGS()
 
 #endif

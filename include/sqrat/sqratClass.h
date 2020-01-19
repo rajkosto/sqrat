@@ -312,7 +312,7 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     template<class F>
     Class& Overload(const SQChar* name, F method) {
-        BindOverload(name, method, SqMemberOverloadedFunc<C, F>, SqOverloadFunc<F>(), SqGetArgCount<F>());
+        BindOverload(name, method, SqMemberOverloadedFunc<C, F>(), SqOverloadFunc<F>(), SqGetArgCount<F>());
         return *this;
     }
 

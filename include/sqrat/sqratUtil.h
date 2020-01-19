@@ -295,6 +295,30 @@ struct member_function_signature<R (C::*)(A...) volatile const>
   using type = R(A...);
 };
 
+
+template <typename C, typename R, typename... A>
+struct member_function_signature<R(C::*)(A...) noexcept>
+{
+  using type = R(A...);
+};
+
+template <typename C, typename R, typename... A>
+struct member_function_signature<R(C::*)(A...) const noexcept>
+{
+  using type = R(A...);
+};
+
+template <typename C, typename R, typename... A>
+struct member_function_signature<R(C::*)(A...) volatile noexcept>
+{
+  using type = R(A...);
+};
+
+template <typename C, typename R, typename... A>
+struct member_function_signature<R(C::*)(A...) volatile const noexcept>
+{
+  using type = R(A...);
+};
 template<typename T>
 using member_function_signature_t = typename member_function_signature<T>::type;
 

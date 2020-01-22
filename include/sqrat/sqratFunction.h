@@ -233,14 +233,14 @@ public:
     }
 
     template <typename... Args>
-    bool Execute(Args const&... args) const {
+    bool Execute(Args&&... args) const {
         static constexpr size_t nArgs = sizeof...(Args);
         SQInteger top = sq_gettop(vm);
 
         sq_pushobject(vm, obj);
         sq_pushobject(vm, env);
 
-        PushArgs(args...);
+        PushArgs(std::forward<Args>(args)...);
 
         HSQUIRRELVM savedVm = vm; // vm can be nulled in sq_call()
         SQRESULT result = sq_call(vm, nArgs + 1, false, SQTrue);
@@ -259,10 +259,10 @@ public:
 
 private:
     template<class Arg, typename... Tail>
-    void PushArgs(Arg const& arg, Tail const&... tail) const
+    void PushArgs(Arg&& arg, Tail&&... tail) const
     {
-      PushVar(vm, arg);
-      PushArgs(tail...);
+      PushVar(vm, std::forward<Arg>(arg));
+      PushArgs(std::forward<Tail>(tail)...);
     }
 
     void PushArgs() const
@@ -270,14 +270,14 @@ private:
     }
 
     template<class Arg, typename... Tail>
-    void PushArgsWithoutRet(Arg const& arg, Tail const&... tail) const
+    void PushArgsWithoutRet(Arg&& arg, Tail&&... tail) const
     {
-      PushVar(vm, arg);
-      PushArgsWithoutRet(tail...);
+      PushVar(vm, std::forward<Arg>(arg));
+      PushArgsWithoutRet(std::forward<Tail>(tail)...);
     }
 
     template<class R>
-    void PushArgsWithoutRet(R const&) const
+    void PushArgsWithoutRet(R&&) const
     {
     }
 

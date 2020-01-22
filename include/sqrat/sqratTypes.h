@@ -160,7 +160,7 @@ struct VarControlsValueLifeTime
 template<class Callable> SQFUNCTION SqGlobalThunk();
 
 template<typename Func>
-struct Var<Func, std::enable_if_t<is_callable_v<Func>>>
+struct Var<Func, std::enable_if_t<std::is_function_v<Func> || std::is_member_function_pointer<Func>::value>>
 {
   static void push(HSQUIRRELVM vm, const Func& value)
   {
@@ -620,6 +620,10 @@ inline void PushVar(HSQUIRRELVM vm, T* value) {
 template<class T>
 inline void PushVar(HSQUIRRELVM vm, const T& value) {
     Var<T>::push(vm, value);
+}
+template<class T>
+inline void PushVar(HSQUIRRELVM vm, T& value) {
+  Var<T*>::push(vm, &value);
 }
 
 

@@ -43,8 +43,8 @@
 
 #endif
 
-#include "../../squirrel.h"
-#include "../../sqstdaux.h"
+#include <squirrel.h>
+#include <sqstdaux.h>
 #include <tuple>
 #include <string>
 #include <unordered_map>

@@ -29,8 +29,8 @@
 #if !defined(_SQRAT_SCRIPT_H_)
 #define _SQRAT_SCRIPT_H_
 
-#include "../../squirrel.h"
-#include "../../sqstdio.h"
+#include <squirrel.h>
+#include <sqstdio.h>
 #include <string.h>
 
 #include "sqratObject.h"

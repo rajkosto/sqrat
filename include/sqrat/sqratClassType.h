@@ -29,7 +29,7 @@
 #if !defined(_SQRAT_CLASSTYPE_H_)
 #define _SQRAT_CLASSTYPE_H_
 
-#include "../../squirrel.h"
+#include <squirrel.h>
 #include <utility>
 #include <unordered_map>
 #include <memory>

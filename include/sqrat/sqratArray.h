@@ -29,7 +29,7 @@
 #if !defined(_SQRAT_ARRAY_H_)
 #define _SQRAT_ARRAY_H_
 
-#include "../../squirrel.h"
+#include <squirrel.h>
 #include <string.h>
 
 #include "sqratObject.h"

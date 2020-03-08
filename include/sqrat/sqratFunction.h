@@ -30,7 +30,7 @@
 #if !defined(_SQRAT_SQFUNC_H_)
 #define _SQRAT_SQFUNC_H_
 
-#include "../../squirrel.h"
+#include <squirrel.h>
 #include "sqratObject.h"
 #include "sqratUtil.h"
 

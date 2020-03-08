@@ -29,8 +29,8 @@
 #if !defined(_SQRAT_CLASS_H_)
 #define _SQRAT_CLASS_H_
 
-#include "../../squirrel.h"
-#include "../../sqstdaux.h"
+#include <squirrel.h>
+#include <sqstdaux.h>
 #include <string.h>
 
 #include "sqratObject.h"

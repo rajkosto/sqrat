@@ -30,7 +30,7 @@
 #if !defined(_SQRAT_GLOBAL_METHODS_H_)
 #define _SQRAT_GLOBAL_METHODS_H_
 
-#include "../../squirrel.h"
+#include <squirrel.h>
 #include "sqratTypes.h"
 #include <functional>
 

@@ -29,8 +29,8 @@
 #if !defined(_SQRAT_OBJECT_H_)
 #define _SQRAT_OBJECT_H_
 
-#include "../../squirrel.h"
-#include "../../sqdirect.h"
+#include <squirrel.h>
+#include <sqdirect.h>
 #include <string.h>
 #include <type_traits>
 
@@ -513,9 +513,12 @@ template<> inline int64_t Object::Cast() const {
 }
 
 template<> inline float Object::Cast() const {
-    return sq_direct_tofloat(&obj);
+    return (float)sq_direct_tofloat(&obj);
 }
 
+template<> inline double Object::Cast() const {
+    return (double)sq_direct_tofloat(&obj);
+}
 
 template<>
 inline void Object::BindValue<int>(const SQChar* name, const int & val, bool staticVar /* = false */) {

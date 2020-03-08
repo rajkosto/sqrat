@@ -29,8 +29,8 @@
 #if !defined(_SQRAT_OVERLOAD_METHODS_H_)
 #define _SQRAT_OVERLOAD_METHODS_H_
 
-#include "../../squirrel.h"
-#include "../../sqstdaux.h"
+#include <squirrel.h>
+#include <sqstdaux.h>
 #include <string>
 #include "sqratTypes.h"
 #include "sqratUtil.h"
@@ -58,7 +58,7 @@ public:
 
     static SQInteger Func(HSQUIRRELVM vm) {
         // Get the arg count
-        int argCount = sq_gettop(vm) - 2;
+        SQInteger argCount = sq_gettop(vm) - 2;
 
         const SQChar* funcName = _SC("n/a");
         sq_getstring(vm, -1, &funcName); // get the function name (free variable)
@@ -72,7 +72,7 @@ public:
         }
 
         // Push the args again
-        for (int i = 1; i <= argCount + 1; ++i) {
+        for (SQInteger i = 1; i <= argCount + 1; ++i) {
             sq_push(vm, i);
         }
 

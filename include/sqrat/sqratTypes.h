@@ -29,7 +29,7 @@
 #if !defined(_SQRAT_TYPES_H_)
 #define _SQRAT_TYPES_H_
 
-#include "../../squirrel.h"
+#include <squirrel.h>
 #include <string>
 
 #include "sqratClassType.h"

@@ -56,8 +56,7 @@ struct SqMemberThunkGen<C, MemberFunc, R(A...)>
 
     C *ptr = Var<C *>(vm, 1).value;
     auto vars = vargs::make_vars<A...>(vm, 2);
-    R ret = vargs::apply_member(ptr, *methodPtr, vars);
-    PushVar(vm, ret);
+    PushVar(vm, vargs::apply_member(ptr, *methodPtr, vars));
     return 1;
   }
 };

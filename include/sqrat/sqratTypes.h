@@ -629,7 +629,7 @@ inline void PushVar(HSQUIRRELVM vm, T& value) {
 
 template<class T, bool b>
 struct PushVarR_helper {
-    inline static void push(HSQUIRRELVM vm, T value) {
+    inline static void push(HSQUIRRELVM vm, const T value) {
         PushVar<T>(vm, value);
     }
 };

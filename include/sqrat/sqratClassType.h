@@ -30,10 +30,6 @@
 #define _SQRAT_CLASSTYPE_H_
 
 #include <squirrel.h>
-#include <utility>
-#include <unordered_map>
-#include <memory>
-
 #include "sqratUtil.h"
 
 namespace Sqrat
@@ -58,7 +54,7 @@ struct AbstractStaticClassData {
     }
 
     AbstractStaticClassData* baseClass;
-    std::string              className;
+    string                   className;
     COPYFUNC                 copyFunc;
 };
 
@@ -75,8 +71,8 @@ struct StaticClassData : public AbstractStaticClassData {
     virtual bool PushInstance(HSQUIRRELVM vm, void *ptr) override;
 };
 
-template<class C> using InstancesMap = unordered_map<C*, HSQOBJECT>;
-template<class C> using InstancePtrAndMap = std::pair<C*, std::shared_ptr<typename InstancesMap<C>::type> >;
+template<class C> using InstancesMap = class_hash_map<C*, HSQOBJECT>;
+template<class C> using InstancePtrAndMap = SQRAT_STD::pair<C*, shared_ptr<InstancesMap<C>> >;
 
 // Every Squirrel class object created by Sqrat in every VM has its own unique ClassData object stored in the registry table of the VM
 template<class C>
@@ -84,8 +80,8 @@ struct ClassData {
     HSQOBJECT classObj;
     HSQOBJECT getTable;
     HSQOBJECT setTable;
-    std::shared_ptr<typename InstancesMap<C>::type> instances;
-    std::shared_ptr<AbstractStaticClassData> staticData;
+    shared_ptr<InstancesMap<C>> instances;
+    shared_ptr<AbstractStaticClassData> staticData;
 
     static int type_id_helper;
     static void* type_id() { return &type_id_helper; }
@@ -99,11 +95,11 @@ template <typename T = void> // dummy template for static var (in-function stati
 class _ClassType_helper
 {
 public:
-    static std::unordered_map<const void*, std::weak_ptr<AbstractStaticClassData>, IntPtrHash> data;
-    static std::weak_ptr<AbstractStaticClassData>& _getStaticClassData(const void* type) { return data[type]; }
+    static class_hash_map<const void*, weak_ptr<AbstractStaticClassData>, IntPtrHash> data;
+    static weak_ptr<AbstractStaticClassData>& _getStaticClassData(const void* type) { return data[type]; }
 };
 template<typename T>
-std::unordered_map<const void*, std::weak_ptr<AbstractStaticClassData>, IntPtrHash> _ClassType_helper<T>::data;
+class_hash_map<const void*, weak_ptr<AbstractStaticClassData>, IntPtrHash> _ClassType_helper<T>::data;
 
 struct ClassesRegistryTable {
     static SQUserPointer slotKey() {
@@ -132,7 +128,7 @@ public:
         return *ud;
     }
 
-    static std::weak_ptr<AbstractStaticClassData>& getStaticClassData() {
+    static weak_ptr<AbstractStaticClassData>& getStaticClassData() {
         return _ClassType_helper<>::_getStaticClassData(ClassData<C>::type_id());
     }
 
@@ -198,7 +194,7 @@ public:
 
         ClassData<C>* cd = getClassData(vm);
 
-        typename InstancesMap<C>::type::iterator it = cd->instances->find(ptr);
+        auto it = cd->instances->find(ptr);
         if (it != cd->instances->end()) {
             sq_pushobject(vm, it->second);
             return true;
@@ -293,18 +289,16 @@ public:
     static SQInteger ToString(HSQUIRRELVM vm) {
         HSQOBJECT ho;
         sq_getstackobj(vm, 1, &ho);
-        //std::string s(std::string::CtorSprintf(), _SC("%s (0x%p)"), ClassName().c_str(), ho._unVal.pInstance);
-        std::string s = ClassName();
-        s += " (0x";
-        s += std::to_string((uintptr_t)ho._unVal.pInstance);
-        s += ")";
-        sq_pushstring(vm, s.c_str(), s.length());
+        int l = SQRAT_SPRINTF(nullptr, 0, _SC("%s (0x%p)"), ClassName().c_str(), ho._unVal.pInstance);
+        string str(l+1, '\0');
+        SQRAT_SPRINTF(&str[0], str.size(), _SC("%s (0x%p)"), ClassName().c_str(), ho._unVal.pInstance);
+        sq_pushstring(vm, str.c_str(), l);
         return 1;
     }
 };
 
 template<class C, class B> bool StaticClassData<C, B>::PushInstance(HSQUIRRELVM vm, void *ptr) {
-  return ClassType<C>::PushInstance(vm, reinterpret_cast<C*>(ptr));
+    return ClassType<C>::PushInstance(vm, reinterpret_cast<C*>(ptr));
 }
 
 

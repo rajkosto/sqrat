@@ -63,9 +63,9 @@ public:
 
     Function(Function&& sf) : Function()
     {
-      std::swap(vm, sf.vm);
-      std::swap(env, sf.env);
-      std::swap(obj, sf.obj);
+      SQRAT_STD::swap(vm, sf.vm);
+      SQRAT_STD::swap(env, sf.env);
+      SQRAT_STD::swap(obj, sf.obj);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -119,9 +119,9 @@ public:
     Function& operator=(Function&& sf)
     {
       Release();
-      std::swap(vm, sf.vm);
-      std::swap(env, sf.env);
-      std::swap(obj, sf.obj);
+      SQRAT_STD::swap(vm, sf.vm);
+      SQRAT_STD::swap(env, sf.env);
+      SQRAT_STD::swap(obj, sf.obj);
       return *this;
     }
 
@@ -174,15 +174,16 @@ public:
         for (size_t i = 0; i < args_count; ++i)
           sq_pushobject(vm, args[i]);
 
+        HSQUIRRELVM savedVm = vm; // vm can be nulled in sq_call()
         SQRESULT result = sq_call(vm, args_count+1, true, SQTrue);
         if (SQ_FAILED(result)) {
             ReportCallError();
-            sq_settop(vm, top);
+            sq_settop(savedVm, top);
             return false;
         }
 
-        ret = Var<R>(vm, -1).value;
-        sq_settop(vm, top);
+        ret = Var<R>(savedVm, -1).value;
+        sq_settop(savedVm, top);
         return true;
     }
 
@@ -195,11 +196,12 @@ public:
         for (size_t i = 0; i < args_count; ++i)
           sq_pushobject(vm, args[i]);
 
+        HSQUIRRELVM savedVm = vm; // vm can be nulled in sq_call()
         SQRESULT result = sq_call(vm, args_count + 1, false, SQTrue);
         if (SQ_FAILED(result))
             ReportCallError();
 
-        sq_settop(vm, top);
+        sq_settop(savedVm, top);
 
         return SQ_SUCCEEDED(result);
     }
@@ -215,20 +217,21 @@ public:
 
       PushArgsWithoutRet(args_and_ret...);
 
+      HSQUIRRELVM savedVm = vm; // vm can be nulled in sq_call()
       SQRESULT result = sq_call(vm, nArgs + 1, true, SQTrue);
       if (SQ_FAILED(result)) {
           ReportCallError();
 
-          sq_settop(vm, top);
+          sq_settop(savedVm, top);
           return false;
       }
 
-      typedef typename std::remove_reference<
+      typedef typename SQRAT_STD::remove_reference<
                           vargs::TailElem_t<ArgsAndRet...>>::type R;
 
-      R& ret = vargs::tail(std::forward<ArgsAndRet>(args_and_ret)...);
-      ret = Var<R>(vm, -1).value;
-      sq_settop(vm, top);
+      R& ret = vargs::tail(SQRAT_STD::forward<ArgsAndRet>(args_and_ret)...);
+      ret = Var<R>(savedVm, -1).value;
+      sq_settop(savedVm, top);
       return true;
     }
 
@@ -240,7 +243,7 @@ public:
         sq_pushobject(vm, obj);
         sq_pushobject(vm, env);
 
-        PushArgs(std::forward<Args>(args)...);
+        PushArgs(SQRAT_STD::forward<Args>(args)...);
 
         HSQUIRRELVM savedVm = vm; // vm can be nulled in sq_call()
         SQRESULT result = sq_call(vm, nArgs + 1, false, SQTrue);
@@ -261,8 +264,8 @@ private:
     template<class Arg, typename... Tail>
     void PushArgs(Arg&& arg, Tail&&... tail) const
     {
-      PushVar(vm, std::forward<Arg>(arg));
-      PushArgs(std::forward<Tail>(tail)...);
+      PushVar(vm, SQRAT_STD::forward<Arg>(arg));
+      PushArgs(SQRAT_STD::forward<Tail>(tail)...);
     }
 
     void PushArgs() const
@@ -272,8 +275,8 @@ private:
     template<class Arg, typename... Tail>
     void PushArgsWithoutRet(Arg&& arg, Tail&&... tail) const
     {
-      PushVar(vm, std::forward<Arg>(arg));
-      PushArgsWithoutRet(std::forward<Tail>(tail)...);
+      PushVar(vm, SQRAT_STD::forward<Arg>(arg));
+      PushArgsWithoutRet(SQRAT_STD::forward<Tail>(tail)...);
     }
 
     template<class R>

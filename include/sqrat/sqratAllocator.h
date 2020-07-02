@@ -32,9 +32,6 @@
 #include <squirrel.h>
 #include <sqstdaux.h>
 #include <string.h>
-#include <utility>
-#include <type_traits>
-#include <memory>
 
 #include "sqratObject.h"
 #include "sqratTypes.h"
@@ -56,17 +53,17 @@ namespace vargs
   }
 
   template <class C, class Tuple, size_t... Indexes>
-  C *apply_ctor_helper(std::index_sequence<Indexes...>, Tuple &&args)
+  C *apply_ctor_helper(SQRAT_STD::index_sequence<Indexes...>, Tuple &&args)
   {
     (void)args; // 'args' is unused in case of empty 'Indexes'
-    return new C(extract(std::get<Indexes>(args))...);
+    return new C(extract(SQRAT_STD::get<Indexes>(args))...);
   }
 
   template <class C, class Tuple>
   C *apply_ctor(Tuple &&tup)
   {
-    constexpr auto argsN = std::tuple_size<std::decay_t<Tuple>>::value;
-    return apply_ctor_helper<C>(std::make_index_sequence<argsN>(), tup);
+    constexpr auto argsN = SQRAT_STD::tuple_size<SQRAT_STD::decay_t<Tuple>>::value;
+    return apply_ctor_helper<C>(SQRAT_STD::make_index_sequence<argsN>(), tup);
   }
 }
 
@@ -115,7 +112,7 @@ public:
     static void SetInstance(HSQUIRRELVM vm, SQInteger idx, C* ptr)
     {
         ClassData<C>* cd = ClassType<C>::getClassData(vm);
-        sq_setinstanceup(vm, idx, new std::pair<C*, std::shared_ptr<typename unordered_map<C*, HSQOBJECT>::type> >(ptr, cd->instances));
+        sq_setinstanceup(vm, idx, new InstancePtrAndMap<C>(ptr, cd->instances));
         sq_setreleasehook(vm, idx, &Delete);
         SQRAT_VERIFY(SQ_SUCCEEDED(sq_getstackobj(vm, idx, &((*cd->instances)[ptr]))));
     }
@@ -129,7 +126,7 @@ public:
     ///
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     static SQInteger New(HSQUIRRELVM vm) {
-        SetInstance(vm, 1, NewC<C, std::is_default_constructible<C>::value >().p);
+        SetInstance(vm, 1, NewC<C, SQRAT_STD::is_default_constructible<C>::value >().p);
         return 0;
     }
 
@@ -151,7 +148,7 @@ public:
     }
 
     static SQInteger iNewVM(HSQUIRRELVM vm) {
-        C *inst = vargs::apply_ctor<C>(std::make_tuple<HSQUIRRELVM&>(vm));
+        C *inst = vargs::apply_ctor<C>(SQRAT_STD::make_tuple<HSQUIRRELVM&>(vm));
         SetInstance(vm, 1, inst);
         return 0;
     }
@@ -161,8 +158,8 @@ public:
         if (!vargs::check_var_types<A...>(vm, 2))
             return SQ_ERROR;
 
-        auto args = std::tuple_cat(
-          std::make_tuple<HSQUIRRELVM&>(vm),
+        auto args = SQRAT_STD::tuple_cat(
+          SQRAT_STD::make_tuple<HSQUIRRELVM&>(vm),
           vargs::make_vars<A...>(vm, 2)
         );
 
@@ -199,7 +196,7 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     static SQInteger Delete(SQUserPointer ptr, SQInteger size) {
         SQRAT_UNUSED(size);
-        std::pair<C*, std::shared_ptr<typename unordered_map<C*, HSQOBJECT>::type> >* instance = reinterpret_cast<std::pair<C*, std::shared_ptr<typename unordered_map<C*, HSQOBJECT>::type> >*>(ptr);
+        InstancePtrAndMap<C>* instance = reinterpret_cast<InstancePtrAndMap<C>*>(ptr);
         instance->second->erase(instance->first);
         delete instance->first;
         delete instance;
@@ -228,7 +225,7 @@ public:
     static void SetInstance(HSQUIRRELVM vm, SQInteger idx, C* ptr)
     {
         ClassData<C>* cd = ClassType<C>::getClassData(vm);
-        sq_setinstanceup(vm, idx, new std::pair<C*, std::shared_ptr<typename unordered_map<C*, HSQOBJECT>::type> >(ptr, cd->instance));
+        sq_setinstanceup(vm, idx, new InstancePtrAndMap<C>(ptr, cd->instance));
         sq_setreleasehook(vm, idx, &Delete);
         SQRAT_VERIFY(SQ_SUCCEEDED(sq_getstackobj(vm, idx, &((*cd->instances)[ptr]))));
     }
@@ -273,7 +270,7 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     static SQInteger Delete(SQUserPointer ptr, SQInteger size) {
         SQRAT_UNUSED(size);
-        std::pair<C*, std::shared_ptr<typename unordered_map<C*, HSQOBJECT>::type> >* instance = reinterpret_cast<std::pair<C*, std::shared_ptr<typename unordered_map<C*, HSQOBJECT>::type> >*>(ptr);
+        InstancePtrAndMap<C> *instance = reinterpret_cast<InstancePtrAndMap<C> *>(ptr);
         instance->second->erase(instance->first);
         delete instance->first;
         delete instance;
@@ -302,7 +299,7 @@ public:
     static void SetInstance(HSQUIRRELVM vm, SQInteger idx, C* ptr)
     {
         ClassData<C>* cd = ClassType<C>::getClassData(vm);
-        sq_setinstanceup(vm, idx, new std::pair<C*, std::shared_ptr<typename unordered_map<C*, HSQOBJECT>::type> >(ptr, cd->instances));
+        sq_setinstanceup(vm, idx, new InstancePtrAndMap<C>(ptr, cd->instances));
         sq_setreleasehook(vm, idx, &Delete);
         SQRAT_VERIFY(SQ_SUCCEEDED(sq_getstackobj(vm, idx, &((*cd->instances)[ptr]))));
     }
@@ -345,7 +342,7 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     static SQInteger Delete(SQUserPointer ptr, SQInteger size) {
         SQRAT_UNUSED(size);
-        std::pair<C*, std::shared_ptr<typename unordered_map<C*, HSQOBJECT>::type> >* instance = reinterpret_cast<std::pair<C*, std::shared_ptr<typename unordered_map<C*, HSQOBJECT>::type> >*>(ptr);
+        InstancePtrAndMap<C> *instance = reinterpret_cast<InstancePtrAndMap<C> *>(ptr);
         instance->second->erase(instance->first);
         delete instance->first;
         delete instance;
@@ -378,7 +375,7 @@ public:
     static void SetInstance(HSQUIRRELVM vm, SQInteger idx, C* ptr)
     {
         ClassData<C>* cd = ClassType<C>::getClassData(vm);
-        sq_setinstanceup(vm, idx, new std::pair<C*, std::shared_ptr<typename unordered_map<C*, HSQOBJECT>::type> >(ptr, cd->instances));
+        sq_setinstanceup(vm, idx, new InstancePtrAndMap<C>(ptr, cd->instances));
         sq_setreleasehook(vm, idx, &Delete);
         SQRAT_VERIFY(SQ_SUCCEEDED(sq_getstackobj(vm, idx, &((*cd->instances)[ptr]))));
     }
@@ -392,7 +389,7 @@ public:
     ///
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     static SQInteger New(HSQUIRRELVM vm) {
-        SetInstance(vm, 1, NewC<C, std::is_default_constructible<C>::value >().p);
+        SetInstance(vm, 1, NewC<C, SQRAT_STD::is_default_constructible<C>::value >().p);
         return 0;
     }
 
@@ -441,7 +438,7 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     static SQInteger Delete(SQUserPointer ptr, SQInteger size) {
         SQRAT_UNUSED(size);
-        std::pair<C*, std::shared_ptr<typename unordered_map<C*, HSQOBJECT>::type> >* instance = reinterpret_cast<std::pair<C*, std::shared_ptr<typename unordered_map<C*, HSQOBJECT>::type> >*>(ptr);
+        InstancePtrAndMap<C> *instance = reinterpret_cast<InstancePtrAndMap<C> *>(ptr);
         instance->second->erase(instance->first);
         delete instance->first;
         delete instance;
